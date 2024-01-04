@@ -80,6 +80,8 @@ pub struct Config {
     pub frequency: Frequency,
     /// Value is specified in number of 16 MHz periods (62.5 ns)
     pub sck_delay: u8,
+    /// Value is specified in number of 64 MHz periods (15.625 ns), valid values between 0 and 7 (inclusive)
+    pub rx_delay: u8,
     /// Whether data is captured on the clock rising edge and data is output on a falling edge (MODE0) or vice-versa (MODE3)
     pub spi_mode: SpiMode,
     /// Addressing mode (24-bit or 32-bit)
@@ -98,6 +100,7 @@ impl Default for Config {
             deep_power_down: None,
             frequency: Frequency::M8,
             sck_delay: 80,
+            rx_delay: 2,
             spi_mode: SpiMode::MODE0,
             address_mode: AddressMode::_24BIT,
             capacity: 0,
@@ -201,6 +204,8 @@ impl<'d, T: Instance> Qspi<'d, T> {
             w.sckfreq().bits(config.frequency as u8);
             w
         });
+
+        r.iftiming.write(|w| unsafe { w.rxdelay().bits(config.rx_delay & 0b111); w });
 
         r.xipoffset.write(|w| unsafe {
             w.xipoffset().bits(config.xip_offset);
